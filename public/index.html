@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M-Pesa Daraja STK Checkout</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f6f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .checkout-card {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            width: 100%;
+            max-width: 400px;
+            box-sizing: border-box;
+        }
+        .logo-container {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .mpesa-green {
+            color: #49A846;
+            font-weight: 800;
+            font-size: 28px;
+        }
+        h2 {
+            margin: 0;
+            color: #333;
+            font-size: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #555;
+            font-size: 14px;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        input:focus {
+            border-color: #49A846;
+            outline: none;
+        }
+        button {
+            width: 100%;
+            background-color: #49A846;
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background-color: #3c8c39;
+        }
+        button:disabled {
+            background-color: #a2d4a0;
+            cursor: not-allowed;
+        }
+        #status-message {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            display: none;
+            text-align: center;
+        }
+        .success { background-color: #e6f4ea; color: #137333; }
+        .error { background-color: #fce8e6; color: #c5221f; }
+        .info { background-color: #e8f0fe; color: #1a73e8; }
+    </style>
+</head>
+<body>
+
+<div class="checkout-card">
+    <div class="logo-container">
+        <span class="mpesa-green">LIPA NA M-PESA</span>
+    </div>
+    <h2>Daraja STK Push Simulator</h2>
+    
+    <form id="payment-form">
+        <div class="form-group">
+            <label for="phone">Phone Number</label>
+            <input type="text" id="phone" placeholder="e.g., 0712345678 or 254712345678" required>
+        </div>
+        <div class="form-group">
+            <label for="amount">Amount (KES)</label>
+            <input type="number" id="amount" value="1" min="1" required>
+        </div>
+        <button type="submit" id="submit-btn">Pay Now</button>
+    </form>
+
+    <div id="status-message"></div>
+</div>
+
+<script>
+    document.getElementById('payment-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const phone = document.getElementById('phone').value;
+        const amount = document.getElementById('amount').value;
+        const submitBtn = document.getElementById('submit-btn');
+        const statusMsg = document.getElementById('status-message');
+
+        // Reset UI
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Processing Prompt...";
+        statusMsg.style.display = "block";
+        statusMsg.className = "info";
+        statusMsg.innerText = "Sending STK Push prompt to your device...";
+
+        try {
+            const response = await fetch('/api/stkpush', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone, amount })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                statusMsg.className = "success";
+                statusMsg.innerText = "✔ Prompt Sent! Enter your M-Pesa PIN on your phone to complete payment.";
+            } else {
+                statusMsg.className = "error";
+                statusMsg.innerText = "❌ Error: " + result.message;
+            }
+        } catch (error) {
+            statusMsg.className = "error";
+            statusMsg.innerText = "❌ System communication breakdown. Check backend terminal.";
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerText = "Pay Now";
+        }
+    });
+</script>
+
+</body>
+</html>
